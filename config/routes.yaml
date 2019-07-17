@@ -1,3 +1,25 @@
 index:
     path: /
     controller: App\Controller\IndexController::index
+
+login:
+  path:       /login
+  controller: App\Controller\SecurityController::login
+  methods: POST
+
+user_list:
+    path: /api/users
+    controller: App\Controller\UsersController::list
+    methods: GET
+
+user_get:
+  path: /api/users/{id}
+  controller: App\Controller\UsersController::show
+  methods: GET
+  format: json
+  requirements:
+    id: '\d+'
+
+user_update:
+  path: /api/users/{id}
+  controller: App\Controller\UsersController::update

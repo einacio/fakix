@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\GroupRepository")
+ * @ORM\Table(name="groups")
  */
 class Group
 {
@@ -30,6 +31,7 @@ class Group
 
     /**
      * @ORM\ManyToMany(targetEntity="App\Entity\user", inversedBy="groups")
+     * @ORM\JoinTable(name="groups_user")
      */
     private $users;
 
@@ -38,12 +40,12 @@ class Group
         $this->users = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -55,7 +57,7 @@ class Group
         return $this;
     }
 
-    public function getIsAdmin(): ?bool
+    public function getIsAdmin(): bool
     {
         return $this->isAdmin;
     }
