@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\GroupRepository;
 use App\Repository\UserRepository;
 use App\Serializer\Normalizer\UserNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,8 +26,12 @@ class UsersController extends AbstractController
      * @var SessionInterface
      */
     private $session;
+    /**
+     * @var GroupRepository
+     */
+    private $groupRepository;
 
-    public function __construct(UserRepository $userRepository, SessionInterface $session)
+    public function __construct(UserRepository $userRepository, GroupRepository $groupRepository, SessionInterface $session)
     {
         $this->userRepository = $userRepository;
 
@@ -34,6 +39,28 @@ class UsersController extends AbstractController
         $serializer = new Serializer($normalizers);
         $this->objectNormalizer = $serializer;
         $this->session = $session;
+        $this->groupRepository = $groupRepository;
+    }
+
+    public function addGroup($id, Request $request)
+    {
+        $user = $this->userRepository->findOrFail($id);
+
+        $group = $this->groupRepository->findOrFail($request->request->get('group'));
+
+        $user->addGroup($group);
+
+        return $this->json(null);
+
+    }
+
+    public function delete($id)
+    {
+
+    }
+
+    public function create()
+    {
     }
 
     /**
@@ -49,6 +76,10 @@ class UsersController extends AbstractController
                 UserNormalizer::AS_OBJECT
             )
         );
+    }
+
+    public function removeGroup($groupId, $id)
+    {
     }
 
     /**
@@ -68,11 +99,11 @@ class UsersController extends AbstractController
 
     public function update($id, UserPasswordEncoderInterface $passwordEncoder, Request $request)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->userRepository->findOrFail($id);
 
         $user->setPassword($passwordEncoder->encodePassword(
                          $user,
-                         $request['new_password']
+                         $request->query->get('new_password')
                      ));
         return $this->json([]);
     }

@@ -1,6 +1,7 @@
 index:
     path: /
     controller: App\Controller\IndexController::index
+    methods: GET
 
 login:
   path:       /login
@@ -17,9 +18,48 @@ user_get:
   controller: App\Controller\UsersController::show
   methods: GET
   format: json
-  requirements:
-    id: '\d+'
+
+user_create:
+  path: /api/users
+  controller: App\Controller\UsersController::create
+  methods: POST
 
 user_update:
   path: /api/users/{id}
   controller: App\Controller\UsersController::update
+  methods: POST
+
+user_delete:
+  path: /api/users/{id}
+  controller: App\Controller\UsersController:delete
+  methods: DELETE
+
+user_add_group:
+  path: /api/users/{id}/groups
+  controller: App\Controller\UsersController::addGroup
+  methods: POST
+
+user_remove_group:
+  path: /api/users/{id}/groups/{groupId}
+  controller: App\Controller\UsersController::removeGroup
+  methods: DELETE
+
+group_list:
+  path: /api/groups
+  controller: App\Controller\GroupsController::list
+  methods: GET
+
+group_get:
+  path: /api/groups/{id}
+  controller: App\Controller\GroupsController::show
+  methods: GET
+
+group_create:
+  path: /api/groups
+  controller: App\Controller\GroupsController::create
+  methods: POST
+
+group_delete:
+  path: /api/groups/{id}
+  controller: App\Controller\GroupsController::delete
+  methods: DELETE

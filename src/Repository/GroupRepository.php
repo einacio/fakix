@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Group;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @method Group|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,32 +20,24 @@ class GroupRepository extends ServiceEntityRepository
         parent::__construct($registry, Group::class);
     }
 
-    // /**
-    //  * @return Group[] Returns an array of Group objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @param $id
+     * @param $lockMode
+     * @param $lockVersion
+     * @return Group
+     */
+    public function findOrFail($id, $lockMode = null, $lockVersion = null): Group
     {
-        return $this->createQueryBuilder('g')
-            ->andWhere('g.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('g.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        //we consider username as an id, since it's unique
+        if (is_numeric($id)) {
+            $user = $this->find($id, $lockMode, $lockVersion);
+        } else {
+            $user = $this->findBy(['name' => $id]);
+        }
+        if (is_null($user)) {
+            throw new NotFoundHttpException();
+        }
 
-    /*
-    public function findOneBySomeField($value): ?Group
-    {
-        return $this->createQueryBuilder('g')
-            ->andWhere('g.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return $user;
     }
-    */
 }
