@@ -117,6 +117,45 @@ let cmd_id = {
     options: [1]
 };
 
+let cmd_groups = {
+    name: 'groups',
+    method: function (cmd) {
+        let groups = [];
+        $.get({url: '/index.php/api/groups', async: false}).done(function (res) {
+            groups = res;
+        });
+        cmd.out = groups.map(function (v) {
+            return v.name;
+        }).join(' ');
+        return cmd;
+    },
+    options: [],
+    help: 'List existing groups.'
+};
+
+let cmd_group = {
+    name: 'group',
+    help: 'Print group and users information about the specified GROUP',
+    method: function (cmd) {
+        if(typeof cmd[1] === "undefined"){
+            cmd.out = 'Group name is required';
+            return cmd;
+        }
+        $.get({url: '/index.php/api/groups/'+cmd[1], async: false}).done(function (res) {
+            cmd.out = 'gid='+res.id+'('+res.name+') users=';
+            if(res.users.lenght) {
+                for (let usr of res.users) {
+                    cmd.out += '' + usr.id + '(' + usr.name + '),';
+                }
+                cmd.out = cmd.out.substring(0, cmd.out.length -1);
+            }
+        });
+        return cmd;
+    },
+    options: [1]
+};
+
+
 let cmd_logout = {
    name: 'logout',
    help: 'Logout user session',
@@ -144,8 +183,8 @@ const cbk_login = {
 
             $ptty.register('command', cmd_users);
             $ptty.register('command', cmd_id);
-            // $ptty.register('command', cmd_groups);
-            // $ptty.register('command', cmd_group);
+            $ptty.register('command', cmd_groups);
+            $ptty.register('command', cmd_group);
             //
             // $ptty.register('command', cmd_passwd);
 

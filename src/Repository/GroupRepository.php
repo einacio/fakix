@@ -28,16 +28,20 @@ class GroupRepository extends ServiceEntityRepository
      */
     public function findOrFail($id, $lockMode = null, $lockVersion = null): Group
     {
-        //we consider username as an id, since it's unique
+        //we consider name as an id, since it's unique
+        $group = null;
         if (is_numeric($id)) {
-            $user = $this->find($id, $lockMode, $lockVersion);
+            $group = $this->find($id, $lockMode, $lockVersion);
         } else {
-            $user = $this->findBy(['name' => $id]);
+            $groupTemp = $this->findBy(['name' => $id]);
+            if($groupTemp){
+                $group = $groupTemp[0];
+            }
         }
-        if (is_null($user)) {
+        if (is_null($group)) {
             throw new NotFoundHttpException();
         }
 
-        return $user;
+        return $group;
     }
 }

@@ -2,33 +2,34 @@
 
 namespace App\Serializer\Normalizer;
 
-use App\Entity\User;
+use App\Entity\Group;
 use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class UserNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+class GroupNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
 {
     const AS_OBJECT = 1;
     const AS_IDLIST = 2;
 
+
     /**
-     * @param User $user
+     * @param Group $group
      * @param int $format
      * @param array $context
      * @return array
      */
-    public function normalize($user, $format = null, array $context = array()): array
+    public function normalize($group, $format = null, array $context = array()): array
     {
 
         if ($format == self::AS_OBJECT) {
             $data = [
-                'id' => $user->getId(),
-                'name' => $user->getName(),
-                'isAdmin' => $user->getIsAdmin(),
-                'groups' => $user->getGroups(),
+                'id' => $group->getId(),
+                'name' => $group->getName(),
+                'isAdmin' => $group->getIsAdmin(),
+                'users' => $group->getUsers(),
             ];
         } else {
-            $data = ['id'=>$user->getId()];
+            $data = ['id'=>$group->getId()];
         }
 
 
@@ -37,7 +38,7 @@ class UserNormalizer implements NormalizerInterface, CacheableSupportsMethodInte
 
     public function supportsNormalization($data, $format = null): bool
     {
-        return $data instanceof User;
+        return $data instanceof Group;
     }
 
     public function hasCacheableSupportsMethod(): bool
