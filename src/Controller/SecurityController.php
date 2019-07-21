@@ -46,7 +46,7 @@ class SecurityController extends AbstractController
         }
 
         //if($auth->checkCredentials())
-        return $this->json(["token" => $user->getApiToken()]);
+        return $this->json(["user"=>$user->getName(), 'isAdmin' => $user->hasRole('ROLE_ADMIN'), "token" => $user->getApiToken()]);
     }
 
     public function firstUse(

@@ -110,12 +110,16 @@ class UsersController extends AbstractController
     }
 
     /**
-     * @param int $id
+     * @param int|string $id
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function show(int $id)
+    public function show($id)
     {
+        if($id === '0'){
+            $id = $this->getUser()->getId();
+        }
+
         return $this->json(
             $this->objectNormalizer->normalize(
                 $this->userRepository->findOrFail($id),

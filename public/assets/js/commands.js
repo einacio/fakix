@@ -13,7 +13,7 @@ let cbf_login = {
                 data: {usr: cmd[1], psw: $input.text()}
             };
             $input
-                .text('xxxxxxxxxx')
+                .text('')
                 .css({'visibility': 'visible'});
         } else if (cmd[1]) {
             opts = {
@@ -46,27 +46,35 @@ let cbf_login = {
 };
 $ptty.register('callbefore', cbf_login);
 
-var cmd_login = {
+const cmd_login = {
     name: 'login',
     method: function (cmd) {
-        var xhr = $.ajax({
+        const xhr = $.ajax({
             url: "/index.php/login",
             method: "POST",
             data: {"username": cmd[1], "password": cmd[2]},
             type: "json",
             async: false
         });
-        xhr.done(function(data){
-            $.ajaxSetup({headers:{"X-AUTH-TOKEN":data.token}});
-            cmd.data = {is_loggedin:true};
+        xhr.done(
+            /**
+             * @param {String} data.token
+             * @param {String} data.user
+             * @param {Boolean} data.isAdmin
+             */
+            function (data) {
+            $.ajaxSetup({headers: {"X-AUTH-TOKEN": data.token}});
+            cmd.data = {is_loggedin: true, isAdmin: data.isAdmin};
+            cmd.ps = '~' + data.user + ' ' + (data.isAdmin ? '#' : '$') + '>';
+            $ptty.change_settings({ps: cmd.ps});
 
-
-        }).fail(function(jqXHR, textStatus, errorThrown){
+        });
+        xhr.fail(function (jqXHR, textStatus, errorThrown) {
 
         });
         return cmd;
     },
-    options: [1, 2],
+    options: [1,2],
     help: 'Login command. Usage: login [username] [password]'
 };
 $ptty.register('command', cmd_login);
@@ -92,8 +100,21 @@ let cmd_id = {
     name: 'id',
     help: 'Print user and group information about the specified USER, or (when the USER is omitted) for the current USER',
     method: function (cmd) {
-        cmd.out = 'uid=0(username) groups=1000(username),24(cdrom)';
-    }
+        if(typeof cmd[1] === "undefined"){
+            cmd[1] = 0;
+        }
+        $.get({url: '/index.php/api/users/'+cmd[1], async: false}).done(function (res) {
+            cmd.out = 'uid='+res.id+'('+res.name+') groups=';
+            if(res.groups.lenght) {
+                for (let grp of res.groups) {
+                    cmd.out += '' + grp.id + '(' + grp.name + '),';
+                }
+                cmd.out = cmd.out.substring(0, cmd.out.length -1);
+            }
+        });
+        return cmd;
+    },
+    options: [1]
 };
 
 let cmd_logout = {
@@ -105,12 +126,16 @@ let cmd_logout = {
        $ptty.register('callbefore', cbf_login);
        $ptty.register('command', cmd_login);
 
+       cmd.out = 'Logged out';
+       cmd.ps = '$';
+       $ptty.change_settings({ps: cmd.ps});
+       setTimeout(()=>$ptty.run_command('login'),1);
        return cmd;
    }
 };
 
 
-var cbk_login = {
+const cbk_login = {
     name: 'login',
     method: function (cmd) {
         if (cmd.data && cmd.data.is_loggedin && cmd.data.is_loggedin === true) {
@@ -119,7 +144,18 @@ var cbk_login = {
 
             $ptty.register('command', cmd_users);
             $ptty.register('command', cmd_id);
-            $ptty.register('command', cmd_id);
+            // $ptty.register('command', cmd_groups);
+            // $ptty.register('command', cmd_group);
+            //
+            // $ptty.register('command', cmd_passwd);
+
+            if(cmd.data.isAdmin){
+                // $ptty.register('command', cmd_useradd);
+                // $ptty.register('command', cmd_userdell);
+                // $ptty.register('command', cmd_usermod);
+                // $ptty.register('command', cmd_groupadd);
+                // $ptty.register('command', cmd_groupdel);
+            }
 
 
             $ptty.register('command', cmd_logout);
@@ -130,16 +166,16 @@ var cbk_login = {
 $ptty.register('callback', cbk_login);
 
 
-var rsp_batch_unregister = {
+const rsp_batch_unregister = {
     name: 'rsp_batch_unregister',
     method: function (cmd) {
         // commands to remove
-        var cmd_names = cmd.rsp_batch_unregister;
+        const cmd_names = cmd.rsp_batch_unregister;
 
         // from these stacks
-        var stacks = ['callbefore', 'command', 'callback'];
-        for (var i = 0; i < stacks.length; i++) {
-            for (var n = 0; n < cmd_names.length; n++) {
+        const stacks = ['callbefore', 'command', 'callback'];
+        for (let i = 0; i < stacks.length; i++) {
+            for (let n = 0; n < cmd_names.length; n++) {
                 $ptty.unregister(stacks[i], cmd_names[n]);
             }
         }
@@ -152,3 +188,6 @@ var rsp_batch_unregister = {
     }
 };
 $ptty.register('response', rsp_batch_unregister);
+
+
+$ptty.run_command('login');

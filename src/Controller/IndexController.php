@@ -27,7 +27,7 @@ html,body{margin:0;padding:0;height: 100%}
 <div id="term"></div>
 <script>
 window.$ptty = $('#term').Ptty({
-            i18n: { welcome : 'Terminal #'+1 }
+            i18n: { welcome : 'Welcome to the FAKIX system. Use "help" to display available commands.' }
         });
 </script>
 <script src="/assets/js/commands.js"></script>
