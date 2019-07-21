@@ -46,12 +46,17 @@ class UsersController extends AbstractController
 
     public function addGroup($id, Request $request)
     {
+        if(!$this->getUser()->hasRole('ROLE_ADMIN')){
+            return $this->json(null, Response::HTTP_FORBIDDEN);
+        }
+
         $user = $this->userRepository->findOrFail($id);
 
         $group = $this->groupRepository->findOrFail($request->request->get('group'));
 
         $user->addGroup($group);
 
+        $this->getDoctrine()->getManager()->flush();
 
         return $this->json(null);
 
@@ -59,6 +64,10 @@ class UsersController extends AbstractController
 
     public function delete($id)
     {
+        if(!$this->getUser()->hasRole('ROLE_ADMIN')){
+            return $this->json(null, Response::HTTP_FORBIDDEN);
+        }
+
         $entityManager = $this->getDoctrine()->getManager();
 
         $user = $this->userRepository->findOrFail($id);
@@ -70,6 +79,10 @@ class UsersController extends AbstractController
 
     public function create(Request $request, UserPasswordEncoderInterface $passwordEncoder)
     {
+        if(!$this->getUser()->hasRole('ROLE_ADMIN')){
+            return $this->json(null, Response::HTTP_FORBIDDEN);
+        }
+
         $entityManager = $this->getDoctrine()->getManager();
 
         $user = new User();
@@ -100,11 +113,17 @@ class UsersController extends AbstractController
 
     public function removeGroup($groupId, $id)
     {
+        if(!$this->getUser()->hasRole('ROLE_ADMIN')){
+            return $this->json(null, Response::HTTP_FORBIDDEN);
+        }
+
         $user = $this->userRepository->findOrFail($id);
 
         $group = $this->groupRepository->findOrFail($groupId);
 
         $user->removeGroup($group);
+
+        $this->getDoctrine()->getManager()->flush();
 
         return $this->json(null);
     }
@@ -130,9 +149,16 @@ class UsersController extends AbstractController
 
     public function update($id, Request $request, UserPasswordEncoderInterface $passwordEncoder)
     {
+        if(!$this->getUser()->hasRole('ROLE_ADMIN')){
+            return $this->json(null, Response::HTTP_FORBIDDEN);
+        }
+
         $user = $this->userRepository->findOrFail($id);
 
         $user->setPassword($request->query->get('new_password'), $passwordEncoder);
+
+        $this->getDoctrine()->getManager()->flush();
+
         return $this->json(null, Response::HTTP_OK);
     }
 }

@@ -111,6 +111,10 @@ let cmd_id = {
                 }
                 cmd.out = cmd.out.substring(0, cmd.out.length - 1);
             }
+        }).fail(function (xhr) {
+            if (xhr.status === 404) {
+                cmd.out = 'User not found';
+            }
         });
         return cmd;
     },
@@ -126,7 +130,7 @@ const cbf_useradd = {
             opts = {
                 out: 'Creating...',
                 last: ' ',
-                data: {usr: cmd[1], psw: cmd[2], adm:$input.text()}
+                data: {usr: cmd[1], psw: cmd[2], adm: $input.text()}
             };
             $input
                 .text('')
@@ -179,13 +183,42 @@ const cmd_useradd = {
             data: {"username": cmd[1], "password": cmd[2], "isAdmin": cmd[3]},
             type: "json"
         });
-        xhr.fail(function (jqXHR, textStatus) {
-            $ptty.echo('Error creating user '+textStatus);
+        xhr.done(function () {
+            $ptty.echo('User created');
+        });
+        xhr.fail(function (jqXHR, textStatus, message) {
+            $ptty.echo('Error creating user ' + message);
         });
         return cmd;
     },
     options: [1, 2, 3],
-    help: 'Login command. Usage: login [username] [password]'
+    help: 'Create a new user. Usage: useradd [username] [password] [is_admin]'
+};
+
+const cmd_userdel = {
+    name: 'userdel',
+    method: function (cmd) {
+
+        if (typeof cmd[1] === "undefined") {
+            cmd.out = 'User name is required';
+            return cmd;
+        }
+
+        const xhr = $.ajax({
+            url: "/index.php/api/users/" + cmd[1],
+            method: "DELETE",
+            type: "json"
+        });
+        xhr.done(function () {
+            $ptty.echo('User deleted');
+        });
+        xhr.fail(function (jqXHR, textStatus, message) {
+            $ptty.echo('Error deleting user ' + message);
+        });
+        return cmd;
+    },
+    options: [1],
+    help: 'Delete a user. Usage: userdel username'
 };
 
 
@@ -225,6 +258,10 @@ let cmd_group = {
                 }
                 cmd.out = cmd.out.substring(0, cmd.out.length - 1);
             }
+        }).fail(function (xhr) {
+            if (xhr.status === 404) {
+                cmd.out = 'Group not found';
+            }
         });
         return cmd;
     },
@@ -237,7 +274,7 @@ let cmd_logout = {
     help: 'Logout user session',
     method: function (cmd) {
         $.ajaxSetup({headers: []});
-        cmd.rsp_batch_unregister = ['id', 'users', 'logout', 'groups','group','useradd'];
+        cmd.rsp_batch_unregister = ['id', 'users', 'logout', 'groups', 'group', 'useradd'];
         $ptty.register('callbefore', cbf_login);
         $ptty.register('command', cmd_login);
         $ptty.register('callback', cbk_login);
@@ -268,7 +305,7 @@ const cbk_login = {
             if (cmd.data.isAdmin) {
                 $ptty.register('callbefore', cbf_useradd);
                 $ptty.register('command', cmd_useradd);
-                // $ptty.register('command', cmd_userdel);
+                $ptty.register('command', cmd_userdel);
                 // $ptty.register('command', cmd_usermod);
                 // $ptty.register('command', cmd_groupadd);
                 // $ptty.register('command', cmd_groupdel);
