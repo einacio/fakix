@@ -1,7 +1,7 @@
 /*globals $ptty*/
 
 //based on the docs example
-let cbf_login = {
+const cbf_login = {
     name: 'login',
     method: function (cmd) {
         let opts, $input = $ptty.get_terminal('.prompt .input');
@@ -63,23 +63,23 @@ const cmd_login = {
              * @param {Boolean} data.isAdmin
              */
             function (data) {
-            $.ajaxSetup({headers: {"X-AUTH-TOKEN": data.token}});
-            cmd.data = {is_loggedin: true, isAdmin: data.isAdmin};
-            cmd.ps = '~' + data.user + ' ' + (data.isAdmin ? '#' : '$') + '>';
-            $ptty.change_settings({ps: cmd.ps});
+                $.ajaxSetup({headers: {"X-AUTH-TOKEN": data.token}});
+                cmd.data = {is_loggedin: true, isAdmin: data.isAdmin};
+                cmd.ps = '~' + data.user + ' ' + (data.isAdmin ? '#' : '$') + '>';
+                $ptty.change_settings({ps: cmd.ps});
 
-        });
+            });
         xhr.fail(function (jqXHR, textStatus, errorThrown) {
 
         });
         return cmd;
     },
-    options: [1,2],
+    options: [1, 2],
     help: 'Login command. Usage: login [username] [password]'
 };
 $ptty.register('command', cmd_login);
 
-
+//region users
 let cmd_users = {
     name: 'users',
     method: function (cmd) {
@@ -100,22 +100,98 @@ let cmd_id = {
     name: 'id',
     help: 'Print user and group information about the specified USER, or (when the USER is omitted) for the current USER',
     method: function (cmd) {
-        if(typeof cmd[1] === "undefined"){
+        if (typeof cmd[1] === "undefined") {
             cmd[1] = 0;
         }
-        $.get({url: '/index.php/api/users/'+cmd[1], async: false}).done(function (res) {
-            cmd.out = 'uid='+res.id+'('+res.name+') is_admin='+(res.isAdmin?'Y':'N')+' groups=';
-            if(res.groups.lenght) {
+        $.get({url: '/index.php/api/users/' + cmd[1], async: false}).done(function (res) {
+            cmd.out = 'uid=' + res.id + '(' + res.name + ') is_admin=' + (res.isAdmin ? 'Y' : 'N') + ' groups=';
+            if (res.groups.lenght) {
                 for (let grp of res.groups) {
                     cmd.out += '' + grp.id + '(' + grp.name + '),';
                 }
-                cmd.out = cmd.out.substring(0, cmd.out.length -1);
+                cmd.out = cmd.out.substring(0, cmd.out.length - 1);
             }
         });
         return cmd;
     },
     options: [1]
 };
+
+const cbf_useradd = {
+    name: 'useradd',
+    method: function (cmd) {
+        let opts, $input = $ptty.get_terminal('.prompt .input');
+
+        if (cmd[1] && cmd[2] && cmd[3]) {
+            opts = {
+                out: 'Creating...',
+                last: ' ',
+                data: {usr: cmd[1], psw: cmd[2], adm:$input.text()}
+            };
+            $input
+                .text('')
+                .css({'visibility': 'visible'});
+        } else if (cmd[1] && cmd[2]) {
+            opts = {
+                out: 'Is Admin (Y/N)?',
+                ps: '[N]> ',
+                next: 'useradd ' + cmd[1] + ' ' + cmd[2] + ' %cmd%',
+            };
+            $input.css({'visibility': 'visible'});
+
+            cmd = false;
+        } else if (cmd[1]) {
+            opts = {
+                out: 'Password?',
+                next: 'useradd ' + cmd[1] + ' %cmd%',
+            };
+
+            $input.css({'visibility': 'hidden'});
+            $(document).on('keydown.escape', function (e) {
+                if (e.which === 27) { // escape key exits command
+                    $input.css({'visibility': 'visible'});
+                    $(this).unbind(e);
+                }
+            });
+
+            cmd = false;
+        } else {
+            opts = {
+                out: 'Username:',
+                ps: '> ',
+                next: 'useradd %cmd%',
+            };
+            cmd = false;
+        }
+
+        $ptty.set_command_option(opts);
+
+        return cmd;
+    }
+};
+
+const cmd_useradd = {
+    name: 'useradd',
+    method: function (cmd) {
+        const xhr = $.ajax({
+            url: "/index.php/api/users",
+            method: "POST",
+            data: {"username": cmd[1], "password": cmd[2], "isAdmin": cmd[3]},
+            type: "json"
+        });
+        xhr.fail(function (jqXHR, textStatus) {
+            $ptty.echo('Error creating user '+textStatus);
+        });
+        return cmd;
+    },
+    options: [1, 2, 3],
+    help: 'Login command. Usage: login [username] [password]'
+};
+
+
+//endregion
+
+//region groups
 
 let cmd_groups = {
     name: 'groups',
@@ -137,40 +213,41 @@ let cmd_group = {
     name: 'group',
     help: 'Print group and users information about the specified GROUP',
     method: function (cmd) {
-        if(typeof cmd[1] === "undefined"){
+        if (typeof cmd[1] === "undefined") {
             cmd.out = 'Group name is required';
             return cmd;
         }
-        $.get({url: '/index.php/api/groups/'+cmd[1], async: false}).done(function (res) {
-            cmd.out = 'gid='+res.id+'('+res.name+') is_admin='+(res.isAdmin?'Y':'N')+' users=';
-            if(res.users.lenght) {
+        $.get({url: '/index.php/api/groups/' + cmd[1], async: false}).done(function (res) {
+            cmd.out = 'gid=' + res.id + '(' + res.name + ') is_admin=' + (res.isAdmin ? 'Y' : 'N') + ' users=';
+            if (res.users.lenght) {
                 for (let usr of res.users) {
                     cmd.out += '' + usr.id + '(' + usr.name + '),';
                 }
-                cmd.out = cmd.out.substring(0, cmd.out.length -1);
+                cmd.out = cmd.out.substring(0, cmd.out.length - 1);
             }
         });
         return cmd;
     },
     options: [1]
 };
-
+//endregion
 
 let cmd_logout = {
-   name: 'logout',
-   help: 'Logout user session',
-   method: function (cmd) {
-       $.ajaxSetup({headers:{}});
-       cmd.rsp_batch_unregister = ['id', 'users', 'logout'];
-       $ptty.register('callbefore', cbf_login);
-       $ptty.register('command', cmd_login);
+    name: 'logout',
+    help: 'Logout user session',
+    method: function (cmd) {
+        $.ajaxSetup({headers: []});
+        cmd.rsp_batch_unregister = ['id', 'users', 'logout', 'groups','group','useradd'];
+        $ptty.register('callbefore', cbf_login);
+        $ptty.register('command', cmd_login);
+        $ptty.register('callback', cbk_login);
 
-       cmd.out = 'Logged out';
-       cmd.ps = '$';
-       $ptty.change_settings({ps: cmd.ps});
-       setTimeout(()=>$ptty.run_command('login'),1);
-       return cmd;
-   }
+        cmd.out = 'Logged out';
+        cmd.ps = '$';
+        $ptty.change_settings({ps: cmd.ps});
+        setTimeout(() => $ptty.run_command('login'), 1);
+        return cmd;
+    }
 };
 
 
@@ -188,9 +265,10 @@ const cbk_login = {
             //
             // $ptty.register('command', cmd_passwd);
 
-            if(cmd.data.isAdmin){
-                // $ptty.register('command', cmd_useradd);
-                // $ptty.register('command', cmd_userdell);
+            if (cmd.data.isAdmin) {
+                $ptty.register('callbefore', cbf_useradd);
+                $ptty.register('command', cmd_useradd);
+                // $ptty.register('command', cmd_userdel);
                 // $ptty.register('command', cmd_usermod);
                 // $ptty.register('command', cmd_groupadd);
                 // $ptty.register('command', cmd_groupdel);

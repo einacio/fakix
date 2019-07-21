@@ -75,7 +75,7 @@ class UsersController extends AbstractController
         $user = new User();
         $user->setName($request->request->get('username'));
         $user->setPassword($request->request->get('password'), $passwordEncoder);
-        $user->setIsAdmin(false);
+        $user->setIsAdmin(strtolower($request->request->get('isAdmin'))==='y');
         $user->setApiToken('');
         $entityManager->persist($user);
         $entityManager->flush();
