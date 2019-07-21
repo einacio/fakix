@@ -80,7 +80,7 @@ const cmd_login = {
 $ptty.register('command', cmd_login);
 
 //region users
-let cmd_users = {
+const cmd_users = {
     name: 'users',
     method: function (cmd) {
         let users = [];
@@ -96,7 +96,7 @@ let cmd_users = {
     help: 'List existing users.'
 };
 
-let cmd_id = {
+const cmd_id = {
     name: 'id',
     help: 'Print user and group information about the specified USER, or (when the USER is omitted) for the current USER',
     method: function (cmd) {
@@ -275,7 +275,7 @@ const cmd_usermod = {
 
 //region groups
 
-let cmd_groups = {
+const cmd_groups = {
     name: 'groups',
     method: function (cmd) {
         let groups = [];
@@ -291,7 +291,7 @@ let cmd_groups = {
     help: 'List existing groups.'
 };
 
-let cmd_group = {
+const cmd_group = {
     name: 'group',
     help: 'Print group and users information about the specified GROUP',
     method: function (cmd) {
@@ -316,14 +316,104 @@ let cmd_group = {
     },
     options: [1]
 };
+
+const cbf_groupadd = {
+    name: 'groupadd',
+    method: function (cmd) {
+        let opts, $input = $ptty.get_terminal('.prompt .input');
+
+        if (cmd[1] && cmd[2]) {
+            opts = {
+                out: 'Creating...',
+                last: ' ',
+                data: {usr: cmd[1], adm: $input.text()}
+            };
+            $input
+                .text('')
+                .css({'visibility': 'visible'});
+        } else if (cmd[1]) {
+            opts = {
+                out: 'Is Admin Group (Y/N)?',
+                ps: '[N]> ',
+                next: 'groupadd ' + cmd[1] + ' %cmd%',
+            };
+            $input.css({'visibility': 'visible'});
+
+            cmd = false;
+        } else {
+            opts = {
+                out: 'Group name:',
+                ps: '> ',
+                next: 'groupadd %cmd%',
+            };
+            cmd = false;
+        }
+
+        $ptty.set_command_option(opts);
+
+        return cmd;
+    }
+};
+
+const cmd_groupadd = {
+    name: 'groupadd',
+    method: function (cmd) {
+        const xhr = $.ajax({
+            url: "/index.php/api/groups",
+            method: "POST",
+            data: {"name": cmd[1], "isAdmin": cmd[2]},
+            type: "json"
+        });
+        xhr.done(function () {
+            $ptty.echo('Group created');
+        });
+        xhr.fail(function (jqXHR, textStatus, message) {
+            $ptty.echo('Error creating group ' + message);
+        });
+        return cmd;
+    },
+    options: [1, 2],
+    help: 'Create a new group. Usage: groupadd [username] [is_admin]'
+};
+
+const cmd_groupdel = {
+    name: 'groupdel',
+    method: function (cmd) {
+
+        if (typeof cmd[1] === "undefined") {
+            cmd.out = 'Group is required';
+            return cmd;
+        }
+
+        const xhr = $.ajax({
+            url: "/index.php/api/groups/" + cmd[1],
+            method: "DELETE",
+            type: "json"
+        });
+        xhr.done(function () {
+            $ptty.echo('Group deleted');
+        });
+        xhr.fail(function (jqXHR, textStatus, message) {
+            if (jqXHR.status === 422) {
+                message = JSON.parse(jqXHR.responseText).message;
+            }
+            $ptty.echo('Error deleting group ' + message);
+
+        });
+        return cmd;
+    },
+    options: [1],
+    help: 'Delete a group. The group needs to be empty. Usage: groupdel group'
+};
+
 //endregion
 
-let cmd_logout = {
+const cmd_logout = {
     name: 'logout',
     help: 'Logout user session',
     method: function (cmd) {
         $.ajaxSetup({headers: []});
-        cmd.rsp_batch_unregister = ['id', 'users', 'logout', 'groups', 'group', 'useradd'];
+        cmd.rsp_batch_unregister = ['id', 'users', 'logout', 'groups', 'group', 'useradd', 'userdel', 'usermod', 'groupadd', 'groupdel'];
         $ptty.register('callbefore', cbf_login);
         $ptty.register('command', cmd_login);
         $ptty.register('callback', cbk_login);
@@ -356,8 +446,10 @@ const cbk_login = {
                 $ptty.register('command', cmd_useradd);
                 $ptty.register('command', cmd_userdel);
                 $ptty.register('command', cmd_usermod);
-                // $ptty.register('command', cmd_groupadd);
-                // $ptty.register('command', cmd_groupdel);
+
+                $ptty.register('callbefore', cbf_groupadd);
+                $ptty.register('command', cmd_groupadd);
+                $ptty.register('command', cmd_groupdel);
             }
 
 
