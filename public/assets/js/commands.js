@@ -104,7 +104,7 @@ let cmd_id = {
             cmd[1] = 0;
         }
         $.get({url: '/index.php/api/users/'+cmd[1], async: false}).done(function (res) {
-            cmd.out = 'uid='+res.id+'('+res.name+') groups=';
+            cmd.out = 'uid='+res.id+'('+res.name+') is_admin='+(res.isAdmin?'Y':'N')+' groups=';
             if(res.groups.lenght) {
                 for (let grp of res.groups) {
                     cmd.out += '' + grp.id + '(' + grp.name + '),';
@@ -142,7 +142,7 @@ let cmd_group = {
             return cmd;
         }
         $.get({url: '/index.php/api/groups/'+cmd[1], async: false}).done(function (res) {
-            cmd.out = 'gid='+res.id+'('+res.name+') users=';
+            cmd.out = 'gid='+res.id+'('+res.name+') is_admin='+(res.isAdmin?'Y':'N')+' users=';
             if(res.users.lenght) {
                 for (let usr of res.users) {
                     cmd.out += '' + usr.id + '(' + usr.name + '),';
