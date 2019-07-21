@@ -1,0 +1,32 @@
+@startuml
+
+' hide the spot
+hide circle
+
+' avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "user" as e01 {
+  *id : number <<generated>>
+  --
+  * **name** : text <<unique>>
+  password : text
+  is_admin : boolean
+}
+
+entity "groups" as e02 {
+  *id : number <<generated>>
+  --
+  * **name** : text <<unique>>
+is_admin : boolean
+}
+
+entity "groups_user" as e03 {
+  *group_id : number <<FK>>
+  *user_id : number <<FK>>
+}
+
+e01 }o..o{ e03
+e02 }o..o{ e03
+
+@enduml
