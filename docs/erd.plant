@@ -26,7 +26,7 @@ entity "groups_user" as e03 {
   *user_id : number <<FK>>
 }
 
-e01 }o..o{ e03
-e02 }o..o{ e03
+e01 ||--o{ e03
+e02 ||--o{ e03
 
 @enduml
