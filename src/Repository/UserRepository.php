@@ -8,7 +8,6 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * @method User|null find($id, $lockMode = null, $lockVersion = null)
  * @method User|null findOneBy(array $criteria, array $orderBy = null)
  * @method User[]    findAll()
  * @method User[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
@@ -20,6 +19,19 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+
+    public function find($id, $lockMode = null, $lockVersion = null)
+    {
+        //we consider username as an id, since it's unique
+        if (is_numeric($id)) {
+            $user = parent::find($id, $lockMode, $lockVersion);
+        } else {
+            $user = $this->findOneBy(['name' => $id]);
+        }
+
+        return $user;
+    }
+
     /**
      * @param $id
      * @param $lockMode
@@ -28,16 +40,8 @@ class UserRepository extends ServiceEntityRepository
      */
     public function findOrFail($id, $lockMode = null, $lockVersion = null): User
     {
-        $user = null;
-        //we consider username as an id, since it's unique
-        if (is_numeric($id)) {
-            $user = $this->find($id, $lockMode, $lockVersion);
-        } else {
-            $userTemp = $this->findBy(['name' => $id]);
-            if($userTemp){
-                $user = $userTemp[0];
-            }
-        }
+        $user = $this->find($id, $lockMode, $lockVersion);
+
         if (is_null($user)) {
             throw new NotFoundHttpException();
         }

@@ -83,6 +83,10 @@ class UsersController extends AbstractController
             return $this->json(null, Response::HTTP_FORBIDDEN);
         }
 
+        if ($this->userRepository->find($request->request->get('username'))) {
+            return $this->json(['message' => 'User already exists'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $entityManager = $this->getDoctrine()->getManager();
 
         $user = new User();

@@ -66,6 +66,11 @@ class GroupsController extends AbstractController
             return $this->json(null, Response::HTTP_FORBIDDEN);
         }
 
+
+        if ($this->groupRepository->find($request->request->get('name'))) {
+            return $this->json(['message' => 'Group already exists'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $entityManager = $this->getDoctrine()->getManager();
 
         $group = new Group();
@@ -85,8 +90,8 @@ class GroupsController extends AbstractController
 
         $group = $this->groupRepository->findOrFail($id);
 
-        if($group->getUsers()->count()){
-            return $this->json(['message'=>'Can\'t delete group with users'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($group->getUsers()->count()) {
+            return $this->json(['message' => 'Can\'t delete group with users'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $entityManager = $this->getDoctrine()->getManager();

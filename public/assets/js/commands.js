@@ -187,6 +187,9 @@ const cmd_useradd = {
             $ptty.echo('User created');
         });
         xhr.fail(function (jqXHR, textStatus, message) {
+            if (jqXHR.status === 422) {
+                message = JSON.parse(jqXHR.responseText).message;
+            }
             $ptty.echo('Error creating user ' + message);
         });
         return cmd;
@@ -213,6 +216,7 @@ const cmd_userdel = {
             $ptty.echo('User deleted');
         });
         xhr.fail(function (jqXHR, textStatus, message) {
+
             $ptty.echo('Error deleting user ' + message);
         });
         return cmd;
@@ -368,6 +372,9 @@ const cmd_groupadd = {
             $ptty.echo('Group created');
         });
         xhr.fail(function (jqXHR, textStatus, message) {
+            if (jqXHR.status === 422) {
+                message = JSON.parse(jqXHR.responseText).message;
+            }
             $ptty.echo('Error creating group ' + message);
         });
         return cmd;
