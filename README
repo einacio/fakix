@@ -1,0 +1,7 @@
+This project includes a basic user admin API.
+
+It allows to create/delete users and groups, and assign users to groups.
+
+The API is used by a simple recreation of *nix shell, with user and group utilities.
+
+The default user is root/root

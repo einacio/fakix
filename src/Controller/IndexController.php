@@ -4,16 +4,32 @@
 namespace App\Controller;
 
 
+use App\Entity\User;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class IndexController extends AbstractController
 {
-public function index(){
+    public function index(UserRepository $userRepository, UserPasswordEncoderInterface $passwordEncoder)
+    {
+
+        if (!$userRepository->findAll()) {
+            $entityManager = $this->getDoctrine()->getManager();
+
+            $user = new User();
+            $user->setName('root');
+            $user->setIsAdmin(true);
+            $user->setPassword('root', $passwordEncoder);
+            $user->setApiToken('');
+            $entityManager->persist($user);
+            $entityManager->flush();
+        }
 
 
-
-    return new Response(<<<'HTML'
+        return new Response(
+            <<<'HTML'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,6 +49,6 @@ window.$ptty = $('#term').Ptty({
 <script src="/assets/js/commands.js"></script>
 </html>
 HTML
-);
-}
+        );
+    }
 }
