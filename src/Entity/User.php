@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -41,6 +42,13 @@ class User implements UserInterface
      */
     private $groups;
 
+
+    /**
+     * @ORM\Column(type="string", unique=true)
+     */
+    private $apiToken;
+
+
     public function __construct()
     {
         $this->groups = new ArrayCollection();
@@ -68,11 +76,19 @@ class User implements UserInterface
         return $this->password;
     }
 
-    public function setPassword(string $password): self
+    public function setPassword(string $password, UserPasswordEncoderInterface $passwordEncoder): self
     {
-        $this->password = $password;
+        $this->password = $passwordEncoder->encodePassword(
+            $this,
+            $password
+        );
 
         return $this;
+    }
+
+    public function checkPassword(string $password, UserPasswordEncoderInterface $passwordEncoder): bool
+    {
+        return $passwordEncoder->isPasswordValid($this, $password);
     }
 
     public function getIsAdmin(): ?bool
@@ -124,7 +140,7 @@ class User implements UserInterface
                 function (
                     /** @noinspection PhpUnusedParameterInspection */ $index,
                     Group $group
-                ) : bool {
+                ): bool {
                     return $group->getIsAdmin();
                 }
             )) {
@@ -163,5 +179,24 @@ class User implements UserInterface
      */
     public function eraseCredentials()
     {
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiToken()
+    {
+        return $this->apiToken;
+    }
+
+    /**
+     * @param string $apiToken
+     * @return User
+     */
+    public function setApiToken($apiToken): self
+    {
+        $this->apiToken = $apiToken;
+
+        return $this;
     }
 }

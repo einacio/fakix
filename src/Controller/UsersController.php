@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\GroupRepository;
 use App\Repository\UserRepository;
 use App\Serializer\Normalizer\UserNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\Serializer;
@@ -50,17 +52,35 @@ class UsersController extends AbstractController
 
         $user->addGroup($group);
 
+
         return $this->json(null);
 
     }
 
     public function delete($id)
     {
+        $entityManager = $this->getDoctrine()->getManager();
 
+        $user = $this->userRepository->findOrFail($id);
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return $this->json(null, Response::HTTP_CREATED);
     }
 
-    public function create()
+    public function create(Request $request, UserPasswordEncoderInterface $passwordEncoder)
     {
+        $entityManager = $this->getDoctrine()->getManager();
+
+        $user = new User();
+        $user->setName($request->request->get('username'));
+        $user->setPassword($request->request->get('password'), $passwordEncoder);
+        $user->setIsAdmin(false);
+        $user->setApiToken('');
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return $this->json(null, Response::HTTP_CREATED);
     }
 
     /**
@@ -80,6 +100,13 @@ class UsersController extends AbstractController
 
     public function removeGroup($groupId, $id)
     {
+        $user = $this->userRepository->findOrFail($id);
+
+        $group = $this->groupRepository->findOrFail($groupId);
+
+        $user->removeGroup($group);
+
+        return $this->json(null);
     }
 
     /**
@@ -97,14 +124,11 @@ class UsersController extends AbstractController
         );
     }
 
-    public function update($id, UserPasswordEncoderInterface $passwordEncoder, Request $request)
+    public function update($id, Request $request, UserPasswordEncoderInterface $passwordEncoder)
     {
         $user = $this->userRepository->findOrFail($id);
 
-        $user->setPassword($passwordEncoder->encodePassword(
-                         $user,
-                         $request->query->get('new_password')
-                     ));
-        return $this->json([]);
+        $user->setPassword($request->query->get('new_password'), $passwordEncoder);
+        return $this->json(null, Response::HTTP_OK);
     }
 }

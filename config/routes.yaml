@@ -1,17 +1,22 @@
 index:
-    path: /
-    controller: App\Controller\IndexController::index
-    methods: GET
+  path: /
+  controller: App\Controller\IndexController::index
+  methods: GET
 
 login:
-  path:       /login
+  path: /login
   controller: App\Controller\SecurityController::login
   methods: POST
 
+first_use:
+  path: /first_use
+  controller: App\Controller\SecurityController::firstUse
+  methods: POST
+
 user_list:
-    path: /api/users
-    controller: App\Controller\UsersController::list
-    methods: GET
+  path: /api/users
+  controller: App\Controller\UsersController::list
+  methods: GET
 
 user_get:
   path: /api/users/{id}

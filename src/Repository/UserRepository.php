@@ -28,11 +28,15 @@ class UserRepository extends ServiceEntityRepository
      */
     public function findOrFail($id, $lockMode = null, $lockVersion = null): User
     {
+        $user = null;
         //we consider username as an id, since it's unique
         if (is_numeric($id)) {
             $user = $this->find($id, $lockMode, $lockVersion);
         } else {
-            $user = $this->findBy(['name' => $id]);
+            $userTemp = $this->findBy(['name' => $id]);
+            if($userTemp){
+                $user = $userTemp[0];
+            }
         }
         if (is_null($user)) {
             throw new NotFoundHttpException();
