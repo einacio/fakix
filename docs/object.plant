@@ -1,0 +1,21 @@
+@startuml
+
+object User {
+id
+name
+password
+isAdmin
+groups
+}
+
+object Group {
+id
+name
+isAdmin
+users
+}
+
+User o-- "0..*" Group
+Group o-- "0..*" User
+
+@enduml
