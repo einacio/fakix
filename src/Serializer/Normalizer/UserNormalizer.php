@@ -20,15 +20,15 @@ class UserNormalizer implements NormalizerInterface, CacheableSupportsMethodInte
     public function normalize($user, $format = null, array $context = array()): array
     {
 
-        if ($format == self::AS_OBJECT) {
+        if ($format === self::AS_IDLIST) {
+            $data = ['id' => $user->getId()];
+        } else {
             $data = [
                 'id' => $user->getId(),
                 'name' => $user->getName(),
                 'isAdmin' => $user->getIsAdmin(),
                 'groups' => $user->getGroups(),
             ];
-        } else {
-            $data = ['id'=>$user->getId()];
         }
 
 

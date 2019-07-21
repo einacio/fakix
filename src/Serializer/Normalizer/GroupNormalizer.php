@@ -21,15 +21,15 @@ class GroupNormalizer implements NormalizerInterface, CacheableSupportsMethodInt
     public function normalize($group, $format = null, array $context = array()): array
     {
 
-        if ($format == self::AS_OBJECT) {
+        if ($format === self::AS_IDLIST) {
+            $data = ['id' => $group->getId()];
+        } else {
             $data = [
                 'id' => $group->getId(),
                 'name' => $group->getName(),
                 'isAdmin' => $group->getIsAdmin(),
                 'users' => $group->getUsers(),
             ];
-        } else {
-            $data = ['id'=>$group->getId()];
         }
 
 

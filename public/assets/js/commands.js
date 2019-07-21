@@ -105,7 +105,7 @@ let cmd_id = {
         }
         $.get({url: '/index.php/api/users/' + cmd[1], async: false}).done(function (res) {
             cmd.out = 'uid=' + res.id + '(' + res.name + ') is_admin=' + (res.isAdmin ? 'Y' : 'N') + ' groups=';
-            if (res.groups.lenght) {
+            if (res.groups.length) {
                 for (let grp of res.groups) {
                     cmd.out += '' + grp.id + '(' + grp.name + '),';
                 }
@@ -221,6 +221,55 @@ const cmd_userdel = {
     help: 'Delete a user. Usage: userdel username'
 };
 
+const cmd_usermod = {
+    name: 'usermod',
+    method: function (cmd) {
+
+        if (typeof cmd[1] === "undefined" || (cmd[1] !== '-a' && cmd[1] !== '-r')) {
+            cmd.out = 'Option must be -a (add group) or -r (remove group)';
+            return cmd;
+        }
+        if (typeof cmd[2] === "undefined") {
+            cmd.out = 'Group is required';
+            return cmd;
+        }
+        if (typeof cmd[3] === "undefined") {
+            cmd.out = 'User is required';
+            return cmd;
+        }
+
+        if (cmd[1] === '-a') {
+            const xhr = $.ajax({
+                url: "/index.php/api/users/" + cmd[3] + '/groups',
+                method: "POST",
+                data: {group: cmd[2]},
+                type: "json"
+            });
+            xhr.done(function () {
+                $ptty.echo('Group added');
+            });
+            xhr.fail(function (jqXHR, textStatus, message) {
+                $ptty.echo('Error adding group ' + message);
+            });
+        } else {
+            const xhr = $.ajax({
+                url: "/index.php/api/users/" + cmd[3] + '/groups/' + cmd[2],
+                method: "DELETE",
+                type: "json"
+            });
+            xhr.done(function () {
+                $ptty.echo('Group removed');
+            });
+            xhr.fail(function (jqXHR, textStatus, message) {
+                $ptty.echo('Error removing group ' + message);
+            });
+        }
+        return cmd;
+    },
+    options: [1, 2, 3],
+    help: 'Add or remove a group from an user. Usage: usermod -a group username; usermod -r group username'
+};
+
 
 //endregion
 
@@ -252,7 +301,7 @@ let cmd_group = {
         }
         $.get({url: '/index.php/api/groups/' + cmd[1], async: false}).done(function (res) {
             cmd.out = 'gid=' + res.id + '(' + res.name + ') is_admin=' + (res.isAdmin ? 'Y' : 'N') + ' users=';
-            if (res.users.lenght) {
+            if (res.users.length) {
                 for (let usr of res.users) {
                     cmd.out += '' + usr.id + '(' + usr.name + '),';
                 }
@@ -306,7 +355,7 @@ const cbk_login = {
                 $ptty.register('callbefore', cbf_useradd);
                 $ptty.register('command', cmd_useradd);
                 $ptty.register('command', cmd_userdel);
-                // $ptty.register('command', cmd_usermod);
+                $ptty.register('command', cmd_usermod);
                 // $ptty.register('command', cmd_groupadd);
                 // $ptty.register('command', cmd_groupdel);
             }
