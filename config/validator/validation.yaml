@@ -1,0 +1,17 @@
+App\Entity\User:
+  properties:
+    name:
+      - NotBlank : ~
+      - Length:
+          min: 3
+          minMessage: 'The name must be at least {{ limit }} characters long'
+    password:
+      - NotBlank: ~
+
+App\Entity\Group:
+  properties:
+    name:
+      - NotBlank : ~
+      - Length:
+          min: 3
+          minMessage: 'The name must be at least {{ limit }} characters long'

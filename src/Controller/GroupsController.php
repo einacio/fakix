@@ -9,6 +9,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class GroupsController extends AbstractController
 {
@@ -60,7 +62,7 @@ class GroupsController extends AbstractController
         );
     }
 
-    public function create(Request $request)
+    public function create(Request $request, ValidatorInterface $validator)
     {
         if (!$this->getUser()->hasRole('ROLE_ADMIN')) {
             return $this->json(null, Response::HTTP_FORBIDDEN);
@@ -76,6 +78,22 @@ class GroupsController extends AbstractController
         $group = new Group();
         $group->setName($request->request->get('name'));
         $group->setIsAdmin(strtolower($request->request->get('isAdmin')) === 'y');
+
+        $errors = $validator->validate($group);
+        if (count($errors)) {
+            $message = '';
+            /** @var ConstraintViolation $error */
+            foreach ($errors as $error) {
+                $message .= $error->getMessage().', ';
+            }
+            $message = rtrim($message, ', ');
+
+            return $this->json(
+                ['message' => $message],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
         $entityManager->persist($group);
         $entityManager->flush();
 
